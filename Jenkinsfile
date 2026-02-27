@@ -7,6 +7,10 @@ pipeline {
         APP_NAME = 'addressbook-app'
     }
 
+    tools {
+        maven 'Maven'   // Make sure Maven is configured in Jenkins
+    }
+
     stages {
 
         stage('Checkout Code') {
@@ -22,18 +26,17 @@ pipeline {
             }
         }
 
-        stage('Clean Old Deployment') {
+        stage('Verify WAR File') {
             steps {
-                sh '''
-                rm -rf $TOMCAT_PATH/$APP_NAME
-                rm -f $TOMCAT_PATH/$APP_NAME.war
-                '''
+                sh 'ls -l target'
             }
         }
 
         stage('Deploy to Tomcat') {
             steps {
                 sh '''
+                rm -rf $TOMCAT_PATH/$APP_NAME
+                rm -f $TOMCAT_PATH/$APP_NAME.war
                 cp target/$APP_NAME.war $TOMCAT_PATH/
                 '''
             }
@@ -43,7 +46,8 @@ pipeline {
             steps {
                 sh '''
                 cd /home/ubuntu/apache-tomcat-9.0.115/bin
-                ./shutdown.sh
+                ./shutdown.sh || true
+                sleep 5
                 ./startup.sh
                 '''
             }
@@ -52,10 +56,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ Deployment Successful 🚀"
+            echo "✅ WAR Built & Deployed Successfully 🚀"
         }
         failure {
-            echo "❌ Deployment Failed"
+            echo "❌ Build or Deployment Failed"
         }
     }
 }
