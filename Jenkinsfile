@@ -2,53 +2,59 @@ pipeline {
     agent any
 
     environment {
-        MAVEN_OPTS = '-Xmx1024m'
         TOMCAT_PATH = '/home/ubuntu/apache-tomcat-9.0.115/webapps'
+        TOMCAT_BIN  = '/home/ubuntu/apache-tomcat-9.0.115/bin'
         APP_NAME = 'addressbook-app'
+        MAVEN_OPTS = '-Xmx512m'
     }
 
     tools {
-        maven 'Maven'   // Make sure Maven is configured in Jenkins
+        maven 'Maven'
+    }
+
+    options {
+        skipDefaultCheckout(true)
+        durabilityHint('PERFORMANCE_OPTIMIZED')
+        timestamps()
     }
 
     stages {
 
         stage('Checkout Code') {
             steps {
-                git url: 'https://github.com/The-Puneet-Kumar/addressbook-app.git',
-                    branch: 'main'
+                git branch: 'main',
+                    url: 'https://github.com/The-Puneet-Kumar/addressbook-app.git'
             }
         }
 
-        stage('Build WAR') {
+        stage('Build WAR Fast') {
             steps {
-                sh 'mvn clean package -DskipTests'
-            }
-        }
-
-        stage('Verify WAR File') {
-            steps {
-                sh 'ls -l target'
+                sh '''
+                echo "Building WAR..."
+                mvn -B -T 1C clean package -DskipTests
+                '''
             }
         }
 
         stage('Deploy to Tomcat') {
             steps {
                 sh '''
+                echo "Stopping Tomcat..."
+                pkill -f tomcat || true
+                sleep 5
+
+                echo "Removing old deployment..."
                 rm -rf $TOMCAT_PATH/$APP_NAME
                 rm -f $TOMCAT_PATH/$APP_NAME.war
-                cp target/$APP_NAME.war $TOMCAT_PATH/
-                '''
-            }
-        }
 
-        stage('Restart Tomcat') {
-            steps {
-                sh '''
-                cd /home/ubuntu/apache-tomcat-9.0.115/bin
-                ./shutdown.sh || true
-                sleep 5
+                echo "Copying new WAR..."
+                cp target/$APP_NAME.war $TOMCAT_PATH/
+
+                echo "Starting Tomcat..."
+                cd $TOMCAT_BIN
                 ./startup.sh
+
+                echo "Deployment Completed"
                 '''
             }
         }
@@ -56,10 +62,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ WAR Built & Deployed Successfully 🚀"
+            echo "✅ Build & Deployment Successful 🚀"
         }
         failure {
-            echo "❌ Build or Deployment Failed"
+            echo "❌ Something went wrong. Check console logs."
         }
     }
 }
