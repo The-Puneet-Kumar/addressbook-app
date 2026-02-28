@@ -3,6 +3,7 @@ pipeline {
 
     tools {
         maven 'Maven'
+        jdk 'Java21'
     }
 
     environment {
@@ -14,17 +15,17 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git 'https://github.com/The-Puneet-Kumar/addressbook-app.git'
+                checkout scm
             }
         }
 
-        stage('Build') {
+        stage('Build WAR') {
             steps {
                 sh 'mvn clean package -DskipTests'
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy to Tomcat') {
             steps {
                 sh '''
                 echo "Stopping Tomcat..."
@@ -35,12 +36,4 @@ pipeline {
                 rm -rf $TOMCAT_DIR/webapps/$APP_NAME*
                 
                 echo "Copying new WAR..."
-                cp target/$APP_NAME.war $TOMCAT_DIR/webapps/
-
-                echo "Starting Tomcat..."
-                $TOMCAT_DIR/bin/startup.sh
-                '''
-            }
-        }
-    }
-}
+                cp target/$APP_NAME.war $TOMCAT
