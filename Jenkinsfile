@@ -39,7 +39,6 @@ stage('Deploy to Tomcat') {
         '''
     }
 }
-
     post {
         success {
             echo 'Deployment Successful'
