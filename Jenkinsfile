@@ -18,27 +18,31 @@ pipeline {
                 sh 'mvn clean package -DskipTests'
             }
         }
-stage('Deploy to Tomcat') {
-    steps {
-        sh '''
-        export TOMCAT_DIR=/home/ubuntu/apache-tomcat-9.0.115
-        export APP_NAME=addressbook-app
 
-        echo "Stopping Tomcat"
-        ${TOMCAT_DIR}/bin/shutdown.sh || true
-        sleep 5
+        stage('Deploy to Tomcat') {
+            steps {
+                sh '''
+                export TOMCAT_DIR=/home/ubuntu/apache-tomcat-9.0.115
+                export APP_NAME=addressbook-app
 
-        echo "Removing old app"
-        rm -rf ${TOMCAT_DIR}/webapps/${APP_NAME} ${TOMCAT_DIR}/webapps/${APP_NAME}.war
+                echo "Stopping Tomcat"
+                ${TOMCAT_DIR}/bin/shutdown.sh || true
+                sleep 5
 
-        echo "Copying new WAR"
-        cp target/${APP_NAME}.war ${TOMCAT_DIR}/webapps/
+                echo "Removing old app"
+                rm -rf ${TOMCAT_DIR}/webapps/${APP_NAME} ${TOMCAT_DIR}/webapps/${APP_NAME}.war
 
-        echo "Starting Tomcat"
-        ${TOMCAT_DIR}/bin/startup.sh
-        '''
-    }
-}
+                echo "Copying new WAR"
+                cp target/${APP_NAME}.war ${TOMCAT_DIR}/webapps/
+
+                echo "Starting Tomcat"
+                ${TOMCAT_DIR}/bin/startup.sh
+                '''
+            }
+        }
+
+    } // end of stages
+
     post {
         success {
             echo 'Deployment Successful'
@@ -47,4 +51,5 @@ stage('Deploy to Tomcat') {
             echo 'Build Failed'
         }
     }
-}
+
+} // end of pipeline
