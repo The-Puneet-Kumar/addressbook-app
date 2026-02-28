@@ -1,71 +1,46 @@
 pipeline {
     agent any
 
-    environment {
-        TOMCAT_PATH = '/home/ubuntu/apache-tomcat-9.0.115/webapps'
-        TOMCAT_BIN  = '/home/ubuntu/apache-tomcat-9.0.115/bin'
-        APP_NAME = 'addressbook-app'
-        MAVEN_OPTS = '-Xmx512m'
-    }
-
     tools {
         maven 'Maven'
     }
 
-    options {
-        skipDefaultCheckout(true)
-        durabilityHint('PERFORMANCE_OPTIMIZED')
-        timestamps()
+    environment {
+        TOMCAT_DIR = '/home/ubuntu/apache-tomcat-9.0.115'
+        APP_NAME = 'addressbook-app'
     }
 
     stages {
 
-        stage('Checkout Code') {
+        stage('Checkout') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/The-Puneet-Kumar/addressbook-app.git'
+                git 'https://github.com/The-Puneet-Kumar/addressbook-app.git'
             }
         }
 
-        stage('Build WAR Fast') {
+        stage('Build') {
             steps {
-                sh '''
-                echo "Building WAR..."
-                mvn -B -T 1C clean package -DskipTests
-                '''
+                sh 'mvn clean package -DskipTests'
             }
         }
 
-        stage('Deploy to Tomcat') {
+        stage('Deploy') {
             steps {
                 sh '''
                 echo "Stopping Tomcat..."
                 pkill -f tomcat || true
                 sleep 5
 
-                echo "Removing old deployment..."
-                rm -rf $TOMCAT_PATH/$APP_NAME
-                rm -f $TOMCAT_PATH/$APP_NAME.war
-
+                echo "Removing old app..."
+                rm -rf $TOMCAT_DIR/webapps/$APP_NAME*
+                
                 echo "Copying new WAR..."
-                cp target/$APP_NAME.war $TOMCAT_PATH/
+                cp target/$APP_NAME.war $TOMCAT_DIR/webapps/
 
                 echo "Starting Tomcat..."
-                cd $TOMCAT_BIN
-                ./startup.sh
-
-                echo "Deployment Completed"
+                $TOMCAT_DIR/bin/startup.sh
                 '''
             }
-        }
-    }
-
-    post {
-        success {
-            echo "✅ Build & Deployment Successful 🚀"
-        }
-        failure {
-            echo "❌ Something went wrong. Check console logs."
         }
     }
 }
