@@ -53,6 +53,7 @@
     <div class="card">
         <div class="checkmark">✅Staragile</div>
         <h1>Jenkins Project Finished</h1>
+<h1>Guided by Vikul Sir</h1>
         <div class="label">Completed by</div>
         <div class="name">Puneet Kumar</div>
     </div>
