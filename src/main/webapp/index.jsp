@@ -51,7 +51,7 @@
 </head>
 <body>
     <div class="card">
-        <div class="checkmark">✅</div>
+        <div class="checkmark">✅Staragile</div>
         <h1>Jenkins Project Finished</h1>
         <div class="label">Completed by</div>
         <div class="name">Puneet Kumar</div>
